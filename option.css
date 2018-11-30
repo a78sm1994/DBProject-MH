@@ -1,0 +1,137 @@
+		.box1{
+			position: absolute;
+			left: 0px;
+			top: 0px;
+			width: 200px;
+			height: 98vh;
+			border: 8px outset gray;
+			background: #BDBDBD;
+			z-index: 30
+		}
+
+		.butsel{
+			background-color: powderblue;
+			margin-left: 10px;
+			margin-top: 10px;
+			width: 180px;
+			height:80px;
+			left: 45%;
+		}
+		select{
+			width: 100px;
+			height: 20px;
+			position: relative;
+		}
+		body{
+			background-color: white;
+		}
+		body, html{
+			position: relative;
+			margin: 0;
+			padding: 0;
+			height: 100%;
+		}
+		.bg2{
+			position: relative;
+			border: 0;
+			padding: 0;
+			background-image: url("aa.png");
+			background-position: 17vw;
+			background-size: 82vw 90vh;
+
+			z-index: 60;
+		}
+		fieldset{
+			position: relative;
+			left: 220px;
+			width:83%;
+			border:2px double black;
+		}
+
+		iframe{
+			border: 0;
+			position: relative;
+			top: 20px;
+			left: 210px;
+			width:85%;
+			height: 85vh;
+			
+		}
+		thead{
+			background: linear-gradient( to left, #cf0, white );
+		}
+		.matt{
+			position: absolute;
+			left: 630px;
+			width: 200px;
+			float: left;
+		}
+		.dropt{
+			position: absolute;
+			left: 630px;
+			float: left;
+			top :100px;			
+			width: 200px;
+		}
+		.armort{
+			position: absolute;
+			left: 900px;
+			top: 30px;
+			width: 23vw;
+		}
+		.bel{
+			height: 83vh;
+			border-width: 3px;
+		}
+		.grad{
+			background: linear-gradient( to left, black, white );
+			border: 2px outset white;
+			font-style: italic;
+
+		}
+		.subbutton{
+			border-radius: 10px/10px;
+			border: 2px outset black;
+			background: linear-gradient( to left, gray, white );
+		}
+
+button{
+	font-size: 1.5em;
+	text-align: center;
+	font-style: italic;
+background: linear-gradient( to bottom, #BDBDBD, white );
+  color:#fff;
+  border:none;
+  position:relative;
+  margin-left: 10px;
+margin-top: 10px;
+width: 180px;
+height:80px;
+  cursor:pointer;
+  transition:800ms ease all;
+  outline:none;
+}
+button:hover{
+  background:#fff;
+  color:black;
+}
+button:before,button:after{
+  content:'';
+  position:absolute;
+  top:0;
+  right:0;
+  height:2px;
+  width:0;
+  background: #000000;
+  transition:400ms ease all;
+}
+button:after{
+  right:inherit;
+  top:inherit;
+  left:0;
+  bottom:0;
+}
+button:hover:before,button:hover:after{
+  width:100%;
+  transition:800ms ease all;
+}
