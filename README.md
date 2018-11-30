@@ -1,13 +1,15 @@
 # DBProject-MH
 Web project which connect with DB
 
-===========================================
+=======================
 Made by Kang Dong Sue
         Kim Min Seop
         Nam He-ul
 For DB_Project3
-===========================================
-[ How to Use ]
+
+=======================
+
+===== [ How to Use ] =====================================
 1) Add new Schema "db_project"
 2) Execute SQLs with following steps(files is in /SQLs/)
    CREATE_TABLE ->
