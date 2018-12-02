@@ -132,8 +132,9 @@ create table Set_Skill(
 create table Members(
 	ID				varchar(255) not null,
     Password_		varchar(255) not null,
-    Name_			varchar(255) not null,
-    primary key(ID, Password_)
+    Email           varchar(255) not null,
+    Sex             varchar(255) not null,
+    primary key(ID)
     );
     
     
