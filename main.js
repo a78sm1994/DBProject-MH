@@ -67,6 +67,7 @@ class Database {
 }
 */
 
+//===== [ GET 함수들 ] ==================================
 //Route, routing
 //Dummy
 app.get('/', function(request, response) {
@@ -81,7 +82,7 @@ app.get('/login', function(request, response) {
 
 //Index
 app.get('/index', function(request, response) {
-    html = H_index.HTML();
+    html = H_index.HTML(null);
     response.send(html);
 });
 /*
@@ -101,25 +102,6 @@ function ExtraQuery1(instance1) {
             });
 }
 */
-app.post('/monster', function(request, response) {
-    var post = request.body;
-    imagesource = post.monster;
-    html = H_monster.Part1();
-    // Part2 : 몬스터 이미지
-    html += H_monster.Part2(imagesource);
-    // Part3 : 각 속성치를 DB에서 받아옴.
-    db.query('select E_Fire,E_Water,E_Light,E_Ice,E_Dragon,C_Poison,C_Sleep,C_Paralysis,C_Bomb,C_Stun from Monster where Mname="안쟈나프"', 
-            function(error, result1) {
-            //획득 가능한 재료들.
-            db.query('SELECT G_Matname, G_Method FROM Get_from WHERE G_Mname="안쟈나프"',
-                    function(error2, result2) {
-                        html += H_monster.Part3_valied(result1, result2);
-                        console.log(html);
-                        response.send(html);
-            });
-    });
-
-});
 
 //Monster
 app.get('/monster', function(request, response) {
@@ -161,13 +143,16 @@ app.get('/monster', function(request, response) {
 
 //Material
 app.get('/mat', function(request, response) {
-    html = H_mat.HTML();
+    html = H_mat.Part1();
+    html += H_mat.Part3();
     response.send(html);
 });
 
 //Armor
 app.get('/armor', function(request, response) {
-    html = H_armor.HTML();
+    html = H_armor.Part1();
+    html += H_armor.Part2_invalid();
+    html += H_armor.Part3_invalid();
     response.send(html);
 });
 
@@ -189,18 +174,11 @@ app.get('/user', function(request, response) {
     response.send(html);
 });
 
-//Post From Item
-app.post('/item', function(request, response) {
-    var post = request.body;
-    var name = post.armorname;
-    console.log(name);
+// ===== [ Post 함수들 ] ===============================
 
-    html = H_item.HTML();
-    response.send(html);
-
-});
-
-//Post From Login
+// 회원가입 창에서 로그인 창으로 갈 때.
+// ID가 중복됐으면 다시 회원가입 창으로 가며,
+// 중복된 것이 없으면 로그인 창으로 감.
 app.post('/login', function(request, response) {
     var post = request.body;
     var id = post.id;
@@ -231,6 +209,123 @@ app.post('/login', function(request, response) {
             return;
          }
      });
+});
+
+// 로그인에서 Post.
+// 비밀번호가 맞다면 Index로 넘어가고,
+// 틀리다면 다시 Login으로 돌아옴.
+app.post('/index', function(request, response) {
+    var post = request.body;
+    var id = post.id;
+    var ps = post.ps;
+    db.query('SELECT ID FROM Members WHERE ID=? AND Password_=?',[id, ps], 
+        function(error, result) {
+            // 맞는 아이디, 비밀번호가 없을 경우
+            if(result[0] == null) {
+                html = H_login.HTML(1);
+                response.send(html);
+                return;
+            }
+            // 알맞게 입력한 경우.
+            else {
+                html = H_index.HTML(id);
+                response.send(html);
+                return;
+            }
+        });
+});
+
+// 몬스터 Tab에서 몬스터 이름을 선택했을 때.
+app.post('/monster', function(request, response) {
+    var post = request.body;
+    imagesource = post.monster;
+    html = H_monster.Part1();
+    // Part2 : 몬스터 이미지
+    html += H_monster.Part2(imagesource);
+    // Part3 : 각 속성치를 DB에서 받아옴.
+    db.query('select E_Fire,E_Water,E_Light,E_Ice,E_Dragon,C_Poison,C_Sleep,C_Paralysis,C_Bomb,C_Stun from Monster where Mname="안쟈나프"', 
+            function(error, result1) {
+            //획득 가능한 재료들.
+            db.query('SELECT G_Matname, G_Method FROM Get_from WHERE G_Mname="안쟈나프"',
+                    function(error2, result2) {
+                        html += H_monster.Part3_valied(result1, result2);
+                        response.send(html);
+            });
+    });
+
+});
+
+// 재료 Tab에서 재료를 선택했을 때.
+app.post('/mat', function(request, response) {
+    var post = request.body;
+    var mat = post.mat_name;
+    var html = H_mat.Part1();
+
+    db.query('SELECT G_Mname, G_Method FROM Get_from WHERE G_Matname = ?',[mat], 
+            function(error, result1) {
+                // DB에 없는 재료를 선택했을 때는 반응이 없도록.
+                if(result1[0] == null) {
+                    H_mat.Part3();
+                    response.send(html);
+                    return;
+                }
+                // 획득 가능한 재료들
+                db.query('SELECT M_Aname, Number_ FROM Making WHERE M_Matname = ?',[mat],
+                    function(error2, result2) {    
+                        html += H_mat.Part2(mat, result1, result2);
+                        html += H_mat.Part3();
+                        response.send(html);
+            });
+    });
+
+});
+
+// 방어구 Tab에서 방어구를 선택했을 때
+app.post('/armor', function(request, response) {
+    var post = request.body;
+    var Aname = post.armor;
+    html = H_armor.Part1();
+
+    // 방어구 이름으로 Armor에서 DB검색
+    db.query('SELECT D_P, Part, R_F,R_W,R_L,R_I,R_D, SA_Skillname, ArmorSkilllevel, A_setname FROM Armor, Skilled_armor WHERE Aname = ? AND Aname = SA_Aname',[Aname], 
+            function(error, result1) {
+            //잘못된 방어구를 입력하였을 때
+            if(result1[0] == null) {
+                html += H_armor.Part2_invalid();
+                html += H_armor.Part3_invalid();
+                response.send(html);
+                return;
+            }
+            db.query('SELECT M_Matname, Number_ FROM Making WHERE M_Aname = ?',[Aname],
+                    function(error2, result2) {
+                        // 같은 효과를 가지는 방어구들 검색
+                        html += H_armor.Part2_valid(Aname, result1, result2);
+                        // 세트 효과가 없을 때
+                        if(result1[0].A_setname == null) {
+                            html += H_armor.Part3_invalid();
+                            response.send(html);
+                            return;
+                        }
+                        db.query('SELECT Aname FROM Armor WHERE A_setname=?',[result1[0].A_setname],
+                            function(error3, result3) {
+                                html += H_armor.Part3_valid(result3);
+                                response.send(html);
+                                return;
+                            });
+            });
+    });
+
+});
+
+//Post From Item
+app.post('/item', function(request, response) {
+    var post = request.body;
+    var name = post.armorname;
+    console.log(name);
+
+    html = H_item.HTML();
+    response.send(html);
+
 });
 
 app.listen(3000, function() {
