@@ -2,7 +2,7 @@ var http = require('http');
 var fs =require('fs');
 var url = require('url');
 var QueryS = require('querystring');
-//===== [ Getting Imports ] ==============
+//===== [ Getting Imports for HTML Codes ] ======
 var H_dummy = require('./lib/H_dummy.js');
 var H_index = require('./lib/H_index.js');
 var H_login = require('./lib/H_login.js');
@@ -35,37 +35,10 @@ var db = mysql.createConnection({
 });
 db.connect();
 
+// Get, Post 함수에서 사용할 html 코드를 담을 부분
 var html;
-
-/*
-class Database {
-    constructor() {
-        this.connection = mysql.createConnection({
-            host     : 'localhost',
-            user     : 'root',
-            password : 'sdno8505',
-            database : 'db_project',
-            charset  : 'utf8'    //DB상에서 글자깨짐 방지.
-        });
-    }
-    query(sql, args) {
-        return new Promise( (resolve, reject) => {
-            this.connection.query(sql, args, (err, rows) => {
-                if(err) return reject(err);
-                resolve(rows);
-            });
-        });
-    }
-    close() {
-        return new Promise( (resolve, reject) => {
-            this.connection.end(err => {
-                if(err) return reject(err);
-                resolve();
-            });
-        });
-    }
-}
-*/
+// 전역 변수로 시뮬레이션에서 사용할 방어구 목록
+var Armors;
 
 //===== [ GET 함수들 ] ==================================
 //Route, routing
@@ -85,23 +58,7 @@ app.get('/index', function(request, response) {
     html = H_index.HTML(null);
     response.send(html);
 });
-/*
-//Function to Avoid Async problem
-function ExtraQuery1(instance1) {
-    console.log('Get in Func');
-    db.query('select Mname from Monster where M_Sname=?',[instance1], 
-            function(error, result) {
-                if(error) {
-                    throw error;
-                }
-                else {
-                    temp = result;
-                    console.log('temp: ', temp);
-                    return result;
-                }
-            });
-}
-*/
+
 
 //Monster
 app.get('/monster', function(request, response) {
@@ -109,36 +66,6 @@ app.get('/monster', function(request, response) {
     html += H_monster.Part3_invalied();
     response.send(html);
 
-
-    /*
-    sname = '수룡종';
-    db.query('select Mname from Monster where M_Sname="수룡종"', function(error, result) {
-        if(error) throw error;
-        html += H_monster.SELECT(sname, result);
-        html += H_monster.LAST();
-        response.send(html, "utf8");
-        console.log(html);
-    });
-
-    
-    //몬스터의 종 선택
-    db.query('select * from Species', function(error, result) {
-        if(error) throw error;
-        var i = 0;
-        //종마다 몬스터의 이름을 DB에서 가져옴.
-        while(i < result.length) {
-            var sname = result[i].Sname;
-            var monsters = ExtraQuery1(sname);
-                
-
-            //html += H_monster.SELECT(sname, monsters);
-            console.log(i, '번째 : ', sname);
-            console.log(monsters);
-            console.log(temp);
-            i++;
-        }
-    });
-    */
 });
 
 //Material
@@ -158,13 +85,20 @@ app.get('/armor', function(request, response) {
 
 //Item
 app.get('/item', function(request, response) {
-    html = H_item.HTML();
+    // 방어구 선택했던 것 초기화
+    Armors = ['-', '-', '-','-','-'];
+    html = H_item.Part1();
+    html += H_item.Part2_invalid();
+    html += H_item.Part3_invalid();
+    html += H_item.Part4(Armors);
+    html += H_item.Part5_invalid();
     response.send(html);
 });
 
 //Skill
 app.get('/skill', function(request, response) {
-    html = H_skill.HTML();
+    html = H_skill.Part1();
+    html += H_skill.NODATA();
     response.send(html);
 });
 
@@ -189,7 +123,6 @@ app.post('/login', function(request, response) {
     //ID중복 여부검사
     db.query('select ID from Members where ID=?',[id],
      function(error, result) {
-         console.log(result[0]);
          //Exceoption
          if(error) {
              throw error;
@@ -218,66 +151,75 @@ app.post('/index', function(request, response) {
     var post = request.body;
     var id = post.id;
     var ps = post.ps;
-    db.query('SELECT ID FROM Members WHERE ID=? AND Password_=?',[id, ps], 
-        function(error, result) {
-            // 맞는 아이디, 비밀번호가 없을 경우
-            if(result[0] == null) {
-                html = H_login.HTML(1);
-                response.send(html);
-                return;
-            }
-            // 알맞게 입력한 경우.
-            else {
-                html = H_index.HTML(id);
-                response.send(html);
-                return;
-            }
-        });
+
+    // 맞는 ID와 Password가 있는지 검색
+    db.query('SELECT ID FROM Members WHERE ID=? AND Password_=?'
+        [id, ps], function(error, result) {
+
+        // 맞는 아이디, 비밀번호가 없을 경우
+        if(result[0] == null) {
+            html = H_login.HTML(1);
+            response.send(html);
+            return;
+        }
+        // 알맞게 입력한 경우.
+        else {
+            html = H_index.HTML(id);
+            response.send(html);
+            return;
+        }
+    });
 });
 
-// 몬스터 Tab에서 몬스터 이름을 선택했을 때.
+// 몬스터 Tab에서의 POST
 app.post('/monster', function(request, response) {
     var post = request.body;
     imagesource = post.monster;
     html = H_monster.Part1();
     // Part2 : 몬스터 이미지
     html += H_monster.Part2(imagesource);
-    // Part3 : 각 속성치를 DB에서 받아옴.
-    db.query('select E_Fire,E_Water,E_Light,E_Ice,E_Dragon,C_Poison,C_Sleep,C_Paralysis,C_Bomb,C_Stun from Monster where Mname="안쟈나프"', 
-            function(error, result1) {
-            //획득 가능한 재료들.
-            db.query('SELECT G_Matname, G_Method FROM Get_from WHERE G_Mname="안쟈나프"',
-                    function(error2, result2) {
-                        html += H_monster.Part3_valied(result1, result2);
-                        response.send(html);
-            });
-    });
 
+    // 각 속성치를 가져오는 Query
+    db.query('select E_Fire,E_Water,E_Light,E_Ice,E_Dragon,C_Poison,C_Sleep,C_Paralysis,C_Bomb,C_Stun from Monster where Mname="안쟈나프"', 
+        function(error, result1) {
+           
+        //획득 가능한 재료와 방법을 가져오는 Query
+        db.query('SELECT G_Matname, G_Method FROM Get_from WHERE G_Mname="안쟈나프"',
+            function(error2, result2) {
+                       
+                html += H_monster.Part3_valied(result1, result2);
+                response.send(html);
+                return;
+        });
+    });
 });
 
-// 재료 Tab에서 재료를 선택했을 때.
+// 재료 Tab에서의 POST
 app.post('/mat', function(request, response) {
     var post = request.body;
     var mat = post.mat_name;
     var html = H_mat.Part1();
 
-    db.query('SELECT G_Mname, G_Method FROM Get_from WHERE G_Matname = ?',[mat], 
-            function(error, result1) {
-                // DB에 없는 재료를 선택했을 때는 반응이 없도록.
-                if(result1[0] == null) {
-                    H_mat.Part3();
-                    response.send(html);
-                    return;
-                }
-                // 획득 가능한 재료들
-                db.query('SELECT M_Aname, Number_ FROM Making WHERE M_Matname = ?',[mat],
-                    function(error2, result2) {    
-                        html += H_mat.Part2(mat, result1, result2);
-                        html += H_mat.Part3();
-                        response.send(html);
-            });
-    });
+    // 재료를 얻는 몬스터, 방법을 구하는 Query
+    db.query('SELECT G_Mname, G_Method FROM Get_from WHERE G_Matname = ?',
+        [mat], function(error, result1) {
+        
+        // DB에 없는 재료를 선택했을 때는 반응이 없도록.
+        if(result1[0] == null) {
+            html += H_mat.Part3();
+            response.send(html);
+            return;
+        }
 
+        // 만들 수 있는 방어구와 그에 필요한 갯수를 구하는 Query
+        db.query('SELECT M_Aname, Number_ FROM Making WHERE M_Matname = ?',
+            [mat], function(error2, result2) {    
+            
+            html += H_mat.Part2(mat, result1, result2);
+            html += H_mat.Part3();
+            response.send(html);
+        });
+    });
 });
 
 // 방어구 Tab에서 방어구를 선택했을 때
@@ -286,46 +228,188 @@ app.post('/armor', function(request, response) {
     var Aname = post.armor;
     html = H_armor.Part1();
 
-    // 방어구 이름으로 Armor에서 DB검색
+    // 방어구의 정보들을 검색하는 Query
     db.query('SELECT D_P, Part, R_F,R_W,R_L,R_I,R_D, SA_Skillname, ArmorSkilllevel, A_setname FROM Armor, Skilled_armor WHERE Aname = ? AND Aname = SA_Aname',[Aname], 
-            function(error, result1) {
-            //잘못된 방어구를 입력하였을 때
-            if(result1[0] == null) {
-                html += H_armor.Part2_invalid();
+        function(error, result1) {
+        
+        //잘못된 방어구를 입력하였을 때
+        if(result1[0] == null) {
+            html += H_armor.Part2_invalid();
+            html += H_armor.Part3_invalid();
+            response.send(html);
+            return;
+        }
+
+        // 재료와 필요한 갯수를 검색하는 Query
+        db.query('SELECT M_Matname, Number_ FROM Making WHERE M_Aname = ?',
+            [Aname], function(error2, result2) {
+                        
+            html += H_armor.Part2_valid(Aname, result1, result2);
+            // 세트 효과가 없을 때
+            if(result1[0].A_setname == null) {
                 html += H_armor.Part3_invalid();
                 response.send(html);
                 return;
             }
-            db.query('SELECT M_Matname, Number_ FROM Making WHERE M_Aname = ?',[Aname],
-                    function(error2, result2) {
-                        // 같은 효과를 가지는 방어구들 검색
-                        html += H_armor.Part2_valid(Aname, result1, result2);
-                        // 세트 효과가 없을 때
-                        if(result1[0].A_setname == null) {
-                            html += H_armor.Part3_invalid();
-                            response.send(html);
-                            return;
-                        }
-                        db.query('SELECT Aname FROM Armor WHERE A_setname=?',[result1[0].A_setname],
-                            function(error3, result3) {
-                                html += H_armor.Part3_valid(result3);
-                                response.send(html);
-                                return;
-                            });
+
+            // 같은 세트를 가지는 방어구들 검색하는 Query
+            db.query('SELECT Aname FROM Armor WHERE A_setname=?',
+                [result1[0].A_setname], function(error3, result3) {
+                    
+                html += H_armor.Part3_valid(result1[0].A_setname, result3);
+                response.send(html);
+                return;
             });
+        });
     });
 
 });
 
-//Post From Item
-app.post('/item', function(request, response) {
+// 스킬 Tab에서 재료를 선택했을 때.
+app.post('/skill', function(request, response) {
     var post = request.body;
-    var name = post.armorname;
-    console.log(name);
+    var skill_name = post.skill_name;
+    var html=H_skill.Part1();
 
-    html = H_item.HTML();
-    response.send(html);
+    db.query('SELECT Skilllevel, Detail FROM Skill WHERE Skillname=?', [skill_name],
+        function(error, result1) {
+            // DB에 없는 재료를 선택했을 때는 반응이 없도록.
+            if(result1[0] == null) {
+                html += H_skill.NODATA();
+                response.send(html);
+                return;
+            }
+            // 스킬을 가져왔을 경우, 그에 맞는 방어구 자료도 가져온다.
+            db.query('SELECT SA_Aname, ArmorSkilllevel, Part FROM Skilled_Armor, Armor WHERE SA_Skillname=? AND Aname=SA_Aname',
+                [skill_name], function(error, result2) {
 
+                    html += H_skill.Part2(skill_name, result1, result2);
+                    response.send(html);
+                    return;
+                });
+        });
+});
+
+// item 시뮬레이션 Tab에서 Post를 받았을 때
+app.post('/item', function(request, response) {
+    // 변수로 사용할 방어구 부위들
+    //           [0], [1], [2], [3], [4]
+    // Armors = {머리, 몸통, 팔, 허리, 다리}
+    // ==========================
+    var post = request.body;
+    var Sel = post.select;
+    html = H_item.Part1();
+
+    //===== 부위를 골랐을 때 ================
+    if(Sel == '0') {
+        var Partname = post.Partname;
+        
+        // 부위에 해당하는 모든 방어구 이름을 구하는 Query
+        db.query('SELECT Aname FROM Armor WHERE Part=?', [Partname],
+        function(error, result1) {
+    
+            html += H_item.Part2(Partname, result1);
+            html += H_item.Part3_invalid();
+            html += H_item.Part4(Armors);
+            html += H_item.Part5_invalid();
+            response.send(html);
+            return;
+        });
+    }
+    //===== 방어구를 골랐을 때 ================
+    else if(Sel == '1') {
+        var Armorname = post.armorname;
+        
+        // 방어구의 부위, 방어력, 속성저항을 고르는 Query
+        db.query('SELECT Part,D_P,R_F,R_W,R_L,R_I,R_D, A_Setname FROM ARMOR WHERE Aname=?',
+        [Armorname], function(error, result1) {
+
+            // 방어구의 스킬정보를 뽑아내는 Query
+            db.query('SELECT SA_Skillname, ArmorSkilllevel FROM Skilled_Armor WHERE SA_Aname=?',
+            [Armorname], function(error, result2) {
+                html += H_item.Part2_invalid();
+                html += H_item.Part3(Armorname, result1, result2);
+                html += H_item.Part4(Armors);
+                html += H_item.Part5_invalid();
+                response.send(html);
+                return;
+            });
+        });
+    }
+
+    //===== 착용하기 버튼 ==========================
+    else if(Sel == '2') {
+        var Part = post.part;
+        var Armorname = post.armorname;
+
+        // 해당하는 부위의 방어구를 전역변수에 저장
+        switch(Part) {
+            case '머리':
+                Armors[0] = Armorname;
+                break;
+            case '몸통':
+                Armors[1] = Armorname;
+                break;
+            case '팔':
+                Armors[2] = Armorname;
+                break;
+            case '허리':
+                Armors[3] = Armorname;
+                break;
+            case '다리':
+                Armors[4] = Armorname;
+                break;
+            default:
+        }
+
+        html += H_item.Part2_invalid();
+        html += H_item.Part3_invalid();
+        html += H_item.Part4(Armors);
+        html += H_item.Part5_invalid();
+        response.send(html);
+        return;
+        
+    }
+
+    //===== 계산하기 버튼 =============================
+    else if(Sel == '3') {
+        // 방어력, 속성저항 합 계산하는 Query
+        db.query('SELECT SUM(D_P) AS S0, SUM(R_F) AS S1,SUM(R_W)AS S2,SUM(R_L) AS S3,SUM(R_I) AS S4,SUM(R_D) AS S5 FROM Armor ' +
+                'WHERE Aname=? OR Aname=? OR Aname=? OR Aname=? OR Aname=?',
+        [Armors[0], Armors[1], Armors[2], Armors[3], Armors[4]], function(error, result1) {
+            
+            // 스킬들 종합하는 Query
+            db.query('SELECT SA_Skillname, SUM(ArmorSkilllevel) AS S FROM Skilled_Armor ' +
+                    'WHERE SA_Aname=? OR SA_Aname=? OR SA_Aname=? OR SA_Aname=? OR SA_Aname=? group by SA_Skillname',
+            [Armors[0], Armors[1], Armors[2], Armors[3], Armors[4]], function(error, result2) {
+                
+                // 세트 효과 스킬을 종합하는 Query
+                db.query('WITH SetSkill AS ' +
+                        '(SELECT A_Setname, COUNT(*) AS C FROM Armor WHERE A_Setname IS NOT NULL ' +
+                        'AND (Aname=? OR Aname=? OR Aname=? OR Aname=? OR Aname=?) ' +
+                        'GROUP BY A_Setname) ' +
+                        'SELECT A_Setname, S_Snumber, S_Skillname, Detail FROM SetSkill, Set_Skill, Skill ' +
+                        'WHERE A_Setname = S_Setname AND S_Snumber <= C AND S_Skillname = Skillname',
+                [Armors[0], Armors[1], Armors[2], Armors[3], Armors[4]], function(error, result3) {
+                    
+                    html += H_item.Part2_invalid();
+                    html += H_item.Part3_invalid();
+                    html += H_item.Part4(Armors);
+                    html += H_item.Part5(result1, result2, result3);
+                    response.send(html);
+                    return;
+                });
+            });
+        });
+    }
+    else {
+        html += H_item.Part2_invalid();
+        html += H_item.Part3_invalid();
+        html += H_item.Part4(Armors);
+        html += H_item.Part5_invalid();
+        response.send(html);
+        return;
+    }
 });
 
 app.listen(3000, function() {
