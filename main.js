@@ -309,7 +309,8 @@ app.post('/armor', function(request, response) {
     html = H_armor.Part1();
 
     // 방어구의 정보들을 검색하는 Query
-    db.query('SELECT D_P, Part, R_F,R_W,R_L,R_I,R_D, SA_Skillname, ArmorSkilllevel, A_setname ' +
+    db.query('SELECT D_P, Part, R_F,R_W,R_L,R_I,R_D, ' +
+            'SA_Skillname, ArmorSkilllevel, A_setname ' +
             'FROM Armor LEFT OUTER JOIN Skilled_armor ' +
             'ON Aname = SA_Aname ' +
             'WHERE Aname=?',[Aname], function(error, result1) {
@@ -354,7 +355,9 @@ app.post('/skill', function(request, response) {
     var skill_name = post.skill_name;
     var html=H_skill.Part1();
 
-    db.query('SELECT Skilllevel, Detail FROM Skill WHERE Skillname=?', [skill_name],
+    // 스킬을 선택했을 때 스킬에 대한 설명을 뽑아오는 Query
+    db.query('SELECT Skilllevel, Detail FROM Skill ' +
+            'WHERE Skillname=? ORDER BY Skillname ASC', [skill_name],
         function(error, result1) {
             // DB에 없는 스킬을 선택했을 때는 반응이 없도록.
             if(result1[0] == null) {
@@ -459,7 +462,9 @@ app.post('/item', function(request, response) {
     //===== 계산하기 버튼 =============================
     else if(Sel == '3') {
         // 방어력, 속성저항 합 계산하는 Query
-        db.query('SELECT SUM(D_P) AS S0, SUM(R_F) AS S1,SUM(R_W)AS S2,SUM(R_L) AS S3,SUM(R_I) AS S4,SUM(R_D) AS S5 FROM Armor ' +
+        db.query('SELECT SUM(D_P) AS S0, SUM(R_F) AS S1,SUM(R_W)AS S2,SUM(R_L)' +
+                'AS S3,SUM(R_I) AS S4,SUM(R_D) AS S5 ' +
+                'FROM Armor ' +
                 'WHERE Aname=? OR Aname=? OR Aname=? OR Aname=? OR Aname=?',
         [Armors[0], Armors[1], Armors[2], Armors[3], Armors[4]], function(error, result1) {
             
@@ -468,7 +473,8 @@ app.post('/item', function(request, response) {
                     'FROM Skilled_Armor ' +
                     'WHERE SA_Aname=? OR SA_Aname=? OR SA_Aname=? OR SA_Aname=? OR SA_Aname=? ' +
                     'GROUP BY SA_Skillname ' +
-                    'HAVING S > 0',
+                    'HAVING S > 0 ' +
+                    'ORDER BY S DESC',
             [Armors[0], Armors[1], Armors[2], Armors[3], Armors[4]], function(error, result2) {
                 
                 // 세트 효과 스킬을 종합하는 Query
