@@ -7,31 +7,31 @@
 	border: 8px outset gray;
 	background: #BDBDBD;
 	z-index: 30
-}
+ }
 
-.butsel{
+ .butsel{
 	background-color: powderblue;
 	margin-left: 10px;
 	margin-top: 10px;
 	width: 180px;
 	height:80px;
 	left: 45%;
-}
-select{
+ }
+ select{
 	width: 100px;
 	height: 20px;
 	position: relative;
-}
-body{
+ }
+ body{
 	background-color: white;
-}
-body, html{
+ }
+ body, html{
 	position: relative;
 	margin: 0;
 	padding: 0;
 	height: 100%;
-}
-.bg2{
+ }
+ .bg2{
 	position: relative;
 	border: 0;
 	padding: 0;
@@ -40,15 +40,15 @@ body, html{
 	background-size: 82vw 90vh;
 
 	z-index: 60;
-}
-fieldset{
+ }
+ fieldset{
 	position: relative;
 	left: 220px;
 	width:83%;
 	border:2px double black;
-}
+ }
 
-iframe{
+ iframe{
 	border: 0;
 	position: relative;
 	top: 20px;
@@ -56,46 +56,47 @@ iframe{
 	width:85%;
 	height: 85vh;
 	
-}
-thead{
+ }
+ thead{
 	background: linear-gradient( to left, #cf0, white );
-}
-.matt{
+ }
+ .matt{
 	position: absolute;
 	left: 630px;
 	width: 200px;
 	float: left;
-}
-.dropt{
+	top: 30px;
+ }
+ .dropt{
 	position: absolute;
 	left: 630px;
 	float: left;
-	top :100px;			
+	top :100px;         
 	width: 200px;
-}
-.armort{
+ }
+ .armort{
 	position: absolute;
 	left: 900px;
 	top: 30px;
 	width: 23vw;
-}
-.bel{
+ }
+ .bel{
 	height: 83vh;
 	border-width: 3px;
-}
-.grad{
+ }
+ .grad{
 	background: linear-gradient( to left, black, white );
 	border: 2px outset white;
 	font-style: italic;
 
-}
-.subbutton{
+ }
+ .subbutton{
 	border-radius: 10px/10px;
 	border: 2px outset black;
 	background: linear-gradient( to left, gray, white );
-}
+ }
 
-button{
+button.d{
 font-size: 1.5em;
 text-align: center;
 font-style: italic;
@@ -111,11 +112,11 @@ cursor:pointer;
 transition:800ms ease all;
 outline:none;
 }
-button:hover{
+button.d:hover{
 background:#fff;
 color:black;
 }
-button:before,button:after{
+button.d:before,button.d:after{
 content:'';
 position:absolute;
 top:0;
@@ -125,13 +126,13 @@ width:0;
 background: #000000;
 transition:400ms ease all;
 }
-button:after{
+button.d:after{
 right:inherit;
 top:inherit;
 left:0;
 bottom:0;
 }
-button:hover:before,button:hover:after{
+button.d:hover:before,button.d:hover:after{
 width:100%;
 transition:800ms ease all;
 }
