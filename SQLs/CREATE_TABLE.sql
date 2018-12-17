@@ -137,5 +137,10 @@ create table Members(
     primary key(ID)
     );
     
+CREATE TABLE Names_(
+	EName	VARCHAR(255)	NOT NULL,
+    KName	VARCHAR(255)	NOT NULL,
+    PRIMARY KEY(EName)
+	);
     
     
